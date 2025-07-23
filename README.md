@@ -18,6 +18,10 @@ Ou usando Maven diretamente:
 mvn spring-boot:run
 ```
 
+### 3. Para executar os tests
+```bash
+mvn test
+```
 
 ## API Endpoints
 
