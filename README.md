@@ -1,10 +1,10 @@
-# WorstMovie API
+# WorstMovie
 
 ## Como executar
 
 ### 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/marlonsouza/wortsmovie.git
 cd worstmovie
 ```
 
