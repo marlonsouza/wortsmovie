@@ -11,10 +11,6 @@ cd worstmovie
 ### 2. Execute o projeto
 ```bash
 mvn clean install
-```
-
-Ou usando Maven diretamente:
-```bash
 mvn spring-boot:run
 ```
 
