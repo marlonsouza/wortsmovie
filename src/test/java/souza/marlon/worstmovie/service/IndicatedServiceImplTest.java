@@ -1,6 +1,5 @@
 package souza.marlon.worstmovie.service;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,6 +11,7 @@ import souza.marlon.worstmovie.model.Producer;
 import souza.marlon.worstmovie.model.Studio;
 import souza.marlon.worstmovie.repository.IndicatedRepository;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +33,7 @@ class IndicatedServiceImplTest {
         var indicatedBuilder = Indicated.builder()
                 .isWinner(false)
                 .title("Teste")
-                .producer(Producer.of("Producer"))
+                .producers(Set.of(Producer.of("Producer")))
                 .studio(Studio.of("Studio"));
 
         var toSave = indicatedBuilder.build();
