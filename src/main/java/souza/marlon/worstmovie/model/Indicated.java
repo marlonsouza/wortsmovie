@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Builder
@@ -23,9 +24,11 @@ public class Indicated {
     private String title;
 
     @NotNull(message = "Producer must be not null")
-    @JoinColumn(name = "producer_id", nullable = false)
-    @ManyToOne
-    private Producer producer;
+    @JoinTable(name = "indicated_producer",
+    joinColumns = @JoinColumn(name = "indicated_id"),
+    inverseJoinColumns = @JoinColumn(name = "producert_id"))
+    @ManyToMany
+    private Set<Producer> producers;
 
     @NotNull(message = "Studio must be not null")
     @JoinColumn(name = "studio_id", nullable = false)

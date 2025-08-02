@@ -1,6 +1,8 @@
 package souza.marlon.worstmovie.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
@@ -8,7 +10,9 @@ import org.springframework.stereotype.Repository;
 import souza.marlon.worstmovie.dto.IntervalAward;
 import souza.marlon.worstmovie.dto.TopIntervalAwards;
 import souza.marlon.worstmovie.model.QIndicated;
+import souza.marlon.worstmovie.model.QProducer;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 @Repository
@@ -21,24 +25,37 @@ public class IntervalAwardsQueryImpl implements IntervalAwardsQuery {
     public TopIntervalAwards execute(long limit){
         var jpaQueryFactory = new JPAQueryFactory(entityManager);
         var indicated = QIndicated.indicated;
+        var indicatedLast = new QIndicated("indicatedLast");
+        var producer = QProducer.producer;
 
-        var yearMax = indicated.yearAt.max();
-        var yearMin = indicated.yearAt.min();
-        var interval = yearMax.subtract(yearMin);
+
+        var lastIndicated = JPAExpressions.select(indicatedLast.yearAt.max())
+                .from(indicatedLast)
+                .where(indicatedLast.producers.contains(producer)
+                        .and(indicatedLast.isWinner.eq(Boolean.TRUE))
+                        .and(indicatedLast.yearAt.lt(indicated.yearAt)));
+        var interval = new CaseBuilder().when(lastIndicated.isNull()).then(0L).otherwise(indicated.yearAt.subtract(lastIndicated));
 
         var baseQuery = jpaQueryFactory
-                .select(indicated.producer.name, yearMin, yearMax, interval)
+                .select(producer.name, indicated.yearAt,
+                        lastIndicated, interval)
                 .from(indicated)
-                .groupBy(indicated.producer.name);
+                .innerJoin(indicated.producers, producer)
+                .where(indicated.isWinner.eq(Boolean.TRUE))
+                .groupBy(producer.name, indicated.yearAt)
+                .having(interval.gt(0L));
 
-        var maxTopTwo = baseQuery.clone(entityManager).orderBy(interval.desc()).limit(limit).fetch();
-        var minTopTwo = baseQuery.clone(entityManager).orderBy(interval.asc()).limit(limit).fetch();
+
+        var maxTopTwo = baseQuery.clone(entityManager).orderBy(interval.desc()).limit(limit)
+                .fetch();
+        var minTopTwo = baseQuery.clone(entityManager).orderBy(interval.asc()).limit(limit)
+                .fetch();
 
         Function<Tuple, IntervalAward> mapper = tuple -> new IntervalAward(
-                tuple.get(indicated.producer.name),
+                tuple.get(producer.name),
                 tuple.get(interval),
-                tuple.get(yearMin),
-                tuple.get(yearMax));
+                Optional.ofNullable(tuple.get(lastIndicated)).orElse(0L),
+                tuple.get(indicated.yearAt));
 
         var maxProducers = maxTopTwo.stream().map(mapper).toList();
         var minProducers = minTopTwo.stream().map(mapper).toList();
